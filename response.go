@@ -1,3 +1,5 @@
+//go:generate ffjson -nodecoder $GOFILE
+
 package auth
 
 // Response is a login response

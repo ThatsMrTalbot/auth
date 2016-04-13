@@ -1,9 +1,12 @@
+//go:generate ffjson -noencoder $GOFILE
+
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/pquerna/ffjson/ffjson"
 )
 
 // Request is a request
@@ -23,8 +26,8 @@ func ParseRequest(r *http.Request) (*Request, error) {
 	contentType := r.Header.Get("Content-Type")
 
 	if strings.Contains(contentType, "json") {
-		decoder := json.NewDecoder(r.Body)
-		err := decoder.Decode(request)
+		decoder := ffjson.NewDecoder()
+		err := decoder.DecodeReader(r.Body, request)
 		if err != nil {
 			return nil, err
 		}

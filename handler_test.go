@@ -24,6 +24,10 @@ func TestHandler(t *testing.T) {
 		handler := NewMockHandler()
 		server := httptest.NewServer(handler)
 
+		Reset(func() {
+			server.Close()
+		})
+
 		Convey("When logging in with valid JSON", func() {
 
 			body := `{"username": "test_user", "password": "test_pass"}`
@@ -186,6 +190,36 @@ func TestHandler(t *testing.T) {
 			})
 		})
 	})
+}
+
+func BenchmarkHandler(b *testing.B) {
+	handler := NewMockHandler()
+	server := httptest.NewServer(handler)
+	body := `{"username": "test_user", "password": "test_pass"}`
+	reader := strings.NewReader(body)
+	client := &http.Client{}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		reader.Seek(0, 0)
+
+		req, err := http.NewRequest("POST", server.URL, reader)
+		if err != nil {
+			b.Errorf("Error creating login request: %s", err.Error())
+			continue
+		}
+		req.Header.Set("Content-Type", "application/json")
+		req.Close = true
+
+		resp, err := client.Do(req)
+		if err != nil {
+			b.Errorf("Error performing login request: %s", err.Error())
+			continue
+		}
+
+		resp.Body.Close()
+	}
+	server.Close()
 }
 
 func NewMockHandler() *Handler {

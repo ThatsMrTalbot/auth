@@ -1,9 +1,10 @@
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/pquerna/ffjson/ffjson"
 
 	"golang.org/x/net/context"
 )
@@ -36,7 +37,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response := &Response{}
 
 	defer func() {
-		encoder := json.NewEncoder(w)
+		encoder := ffjson.NewEncoder(w)
 		encoder.Encode(response)
 	}()
 
