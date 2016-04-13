@@ -37,7 +37,7 @@ func TestSigningMethodHMAC(t *testing.T) {
 			So(err2, ShouldBeNil)
 			So(err3, ShouldBeNil)
 
-			Convey("The signature should be valid", func() {
+			Convey("Then the signature should be valid", func() {
 				err1 := method1.Method().Verify("somestring", signed1, method1.PublicKey(kid1))
 				err2 := method2.Method().Verify("somestring", signed2, method2.PublicKey(kid2))
 				err3 := method3.Method().Verify("somestring", signed3, method3.PublicKey(kid3))
@@ -90,7 +90,7 @@ func TestSigningMethodECDSA(t *testing.T) {
 			So(err2, ShouldBeNil)
 			So(err3, ShouldBeNil)
 
-			Convey("The signature should be valid", func() {
+			Convey("Then the signature should be valid", func() {
 				err1 := method1.Method().Verify("somestring", signed1, method1.PublicKey(kid1))
 				err2 := method2.Method().Verify("somestring", signed2, method2.PublicKey(kid2))
 				err3 := method3.Method().Verify("somestring", signed3, method3.PublicKey(kid3))
@@ -132,7 +132,7 @@ func TestSigningMethodRSA(t *testing.T) {
 			So(err2, ShouldBeNil)
 			So(err3, ShouldBeNil)
 
-			Convey("The signature should be valid", func() {
+			Convey("Then the signature should be valid", func() {
 				err1 := method1.Method().Verify("somestring", signed1, method1.PublicKey(kid1))
 				err2 := method2.Method().Verify("somestring", signed2, method2.PublicKey(kid2))
 				err3 := method3.Method().Verify("somestring", signed3, method3.PublicKey(kid3))
@@ -174,7 +174,7 @@ func TestSigningMethodRSAPSS(t *testing.T) {
 			So(err2, ShouldBeNil)
 			So(err3, ShouldBeNil)
 
-			Convey("The signature should be valid", func() {
+			Convey("Then the signature should be valid", func() {
 				err1 := method1.Method().Verify("somestring", signed1, method1.PublicKey(kid1))
 				err2 := method2.Method().Verify("somestring", signed2, method2.PublicKey(kid2))
 				err3 := method3.Method().Verify("somestring", signed3, method3.PublicKey(kid3))

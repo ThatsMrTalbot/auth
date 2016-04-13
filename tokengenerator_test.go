@@ -29,7 +29,7 @@ func TestTokenGenerator(t *testing.T) {
 			str, err := generator.Sign(token)
 			So(err, ShouldBeNil)
 
-			Convey("The token should be valid", func() {
+			Convey("Then the token should be valid", func() {
 				parsed, err := generator.Verify(str)
 				So(err, ShouldBeNil)
 
@@ -46,7 +46,7 @@ func TestTokenGenerator(t *testing.T) {
 			str, err := generator.Sign(token)
 			So(err, ShouldBeNil)
 
-			Convey("The token should be invalid", func() {
+			Convey("Then the token should be invalid", func() {
 				parsed, err := generator.Verify(str)
 				So(parsed, ShouldBeNil)
 				So(err, ShouldNotBeNil)
@@ -56,7 +56,7 @@ func TestTokenGenerator(t *testing.T) {
 		Convey("When an invalid token is verified", func() {
 			parsed, err := generator.Verify("invalid_token")
 
-			Convey("The token should be invalid", func() {
+			Convey("Then an error should be returned", func() {
 				So(parsed, ShouldBeNil)
 				So(err, ShouldNotBeNil)
 			})
@@ -74,7 +74,7 @@ func TestTokenGenerator(t *testing.T) {
 			str, err := generatorRSA.Sign(token)
 			So(err, ShouldBeNil)
 
-			Convey("The token should be invalid", func() {
+			Convey("Then an error should be returned", func() {
 				parsed, err := generator.Verify(str)
 				So(parsed, ShouldBeNil)
 				So(err, ShouldNotBeNil)

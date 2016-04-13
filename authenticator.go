@@ -20,37 +20,58 @@ func NewAuthenticator(generator *TokenGenerator, storage Storage, lifetime time.
 
 // Authenticate user and generate token
 func (a *Authenticator) Authenticate(user string, pass string) (string, error) {
-	uid, err := a.storage.GetUser(user, pass)
+	u, err := a.storage.Authenticate(user, pass)
 	if err != nil {
 		return "", err
 	}
 
-	return a.Generate(uid)
+	return a.Generate(u)
 }
 
 // Validate token and return UID
-func (a *Authenticator) Validate(token string) (string, error) {
+func (a *Authenticator) Validate(token string) (*User, error) {
 	parsed, err := a.generator.Verify(token)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	if uid, ok := parsed.Claims["uid"].(string); ok {
-		return uid, nil
+	uid, ok := parsed.Claims["uid"].(string)
+	if !ok {
+		return nil, ErrTokenInvalid
 	}
 
-	return "", ErrTokenInvalid
+	permissions, ok := parsed.Claims["permissions"].([]interface{})
+	if !ok {
+		return nil, ErrTokenInvalid
+	}
+
+	user := &User{
+		UID:         uid,
+		Permissions: make([]string, 0, len(permissions)),
+	}
+
+	for _, permission := range permissions {
+		if p, ok := permission.(string); ok {
+			user.Permissions = append(user.Permissions, p)
+		}
+	}
+
+	return user, nil
 }
 
 // Generate token for UID
-func (a *Authenticator) Generate(uid string) (string, error) {
+func (a *Authenticator) Generate(user *User) (string, error) {
 	token := a.generator.Create()
 
 	if a.lifetime > 0 {
 		token.Claims["exp"] = time.Now().Add(a.lifetime).Unix()
 	}
 
-	token.Claims["uid"] = uid
+	token.Claims["uid"] = user.UID
+	token.Claims["permissions"] = []string{}
+	if user.Permissions != nil {
+		token.Claims["permissions"] = user.Permissions
+	}
 
 	return a.generator.Sign(token)
 }

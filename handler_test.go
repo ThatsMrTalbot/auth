@@ -24,13 +24,13 @@ func TestHandler(t *testing.T) {
 		handler := NewMockHandler()
 		server := httptest.NewServer(handler)
 
-		Convey("When the handler is requested with valid login JSON", func() {
+		Convey("When logging in with valid JSON", func() {
 
 			body := `{"username": "test_user", "password": "test_pass"}`
 			response, err := http.Post(server.URL, "application/json", strings.NewReader(body))
 			So(err, ShouldBeNil)
 
-			Convey("The response contains a valid token", func() {
+			Convey("Then the response should contain a valid token", func() {
 				body := make(map[string]string)
 				decoder := json.NewDecoder(response.Body)
 				err := decoder.Decode(&body)
@@ -42,14 +42,14 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
-		Convey("When the handler is requested with valid login post data", func() {
+		Convey("When logging in with valid POST data", func() {
 			response, err := http.PostForm(server.URL, url.Values{
 				"username": []string{"test_user"},
 				"password": []string{"test_pass"},
 			})
 			So(err, ShouldBeNil)
 
-			Convey("The response contains a valid token", func() {
+			Convey("Then the response should contain a valid token", func() {
 				body := make(map[string]string)
 				decoder := json.NewDecoder(response.Body)
 				err := decoder.Decode(&body)
@@ -61,13 +61,13 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
-		Convey("When the handler is requested with invalid login JSON", func() {
+		Convey("When logging in with incorrect user details in valid JSON", func() {
 
 			body := `{"username": "invalid", "password": "invalid"}`
 			response, err := http.Post(server.URL, "application/json", strings.NewReader(body))
 			So(err, ShouldBeNil)
 
-			Convey("The response contains a valid token", func() {
+			Convey("Then the response should contain an error", func() {
 				body := make(map[string]string)
 				decoder := json.NewDecoder(response.Body)
 				err := decoder.Decode(&body)
@@ -79,11 +79,11 @@ func TestHandler(t *testing.T) {
 			})
 		})
 
-		Convey("When the handler is requested with invalid body", func() {
+		Convey("When logging in with invalid JSON", func() {
 			response, err := http.Post(server.URL, "application/json", strings.NewReader(""))
 			So(err, ShouldBeNil)
 
-			Convey("The response contains a valid token", func() {
+			Convey("Then the response should contain an error", func() {
 				body := make(map[string]string)
 				decoder := json.NewDecoder(response.Body)
 				err := decoder.Decode(&body)
@@ -96,10 +96,11 @@ func TestHandler(t *testing.T) {
 		})
 	})
 
-	Convey("Given an valid token post value in a request", t, func() {
+	Convey("Given a server request with a valid token in the POST data", t, func() {
 		handler := NewMockHandler()
 
-		token, err := handler.auth.Generate("someid")
+		user := NewMockUser("someid")
+		token, err := handler.auth.Generate(user)
 		So(err, ShouldBeNil)
 
 		data := url.Values{"token": []string{token}}
@@ -108,20 +109,22 @@ func TestHandler(t *testing.T) {
 
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		Convey("When request is parsed", func() {
-			uid, err := handler.UID(req)
+		Convey("When the request is parsed", func() {
+			user, err := handler.UserFromRequest(req)
 
-			Convey("Then the uid should correct", func() {
-				So(uid, ShouldEqual, "someid")
+			Convey("Then the user data should be returned", func() {
+				So(user, ShouldNotBeNil)
+				So(user.UID, ShouldEqual, "someid")
 				So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Given an valid token JSON in a request", t, func() {
+	Convey("Given a server request with a valid token using JSON data", t, func() {
 		handler := NewMockHandler()
 
-		token, err := handler.auth.Generate("someid")
+		user := NewMockUser("someid")
+		token, err := handler.auth.Generate(user)
 		So(err, ShouldBeNil)
 
 		data := fmt.Sprintf(`{"token":"%s"}`, token)
@@ -131,16 +134,17 @@ func TestHandler(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		Convey("When request is parsed", func() {
-			uid, err := handler.UID(req)
+			user, err := handler.UserFromRequest(req)
 
-			Convey("Then the uid should correct", func() {
-				So(uid, ShouldEqual, "someid")
+			Convey("Then the user data should be returned", func() {
+				So(user, ShouldNotBeNil)
+				So(user.UID, ShouldEqual, "someid")
 				So(err, ShouldBeNil)
 			})
 		})
 	})
 
-	Convey("Given an invalid JSON data in a request", t, func() {
+	Convey("Given a server request with invalid JSON data", t, func() {
 		handler := NewMockHandler()
 
 		req, err := http.NewRequest("POST", "/", strings.NewReader(""))
@@ -149,10 +153,10 @@ func TestHandler(t *testing.T) {
 		req.Header.Set("Content-Type", "application/json")
 
 		Convey("When request is parsed", func() {
-			uid, err := handler.UID(req)
+			user, err := handler.UserFromRequest(req)
 
-			Convey("Then the uid should empty", func() {
-				So(uid, ShouldBeEmpty)
+			Convey("Then an error should be returned", func() {
+				So(user, ShouldBeNil)
 				So(err, ShouldNotBeNil)
 			})
 		})
@@ -161,12 +165,13 @@ func TestHandler(t *testing.T) {
 	Convey("Given an context instance", t, func() {
 		ctx := context.Background()
 
-		Convey("When context with uid is created", func() {
-			ctx = NewContext(ctx, "someid")
+		Convey("When context with user information is created", func() {
+			user := NewMockUser("someid")
+			ctx = NewUserContext(ctx, user)
 
-			Convey("Then the uid should be in the context", func() {
-				uid := UID(ctx)
-				So(uid, ShouldEqual, "someid")
+			Convey("Then the user information should be in the context", func() {
+				retrieved := UserFromContext(ctx)
+				So(retrieved, ShouldResemble, user)
 			})
 		})
 	})
@@ -174,10 +179,10 @@ func TestHandler(t *testing.T) {
 	Convey("Given an context instance", t, func() {
 		ctx := context.Background()
 
-		Convey("When no uid is in the context", func() {
-			Convey("Then the uid should not be in the context", func() {
-				uid := UID(ctx)
-				So(uid, ShouldBeEmpty)
+		Convey("When no user information in the context", func() {
+			Convey("Then no user information should be in the context", func() {
+				user := UserFromContext(ctx)
+				So(user, ShouldBeNil)
 			})
 		})
 	})
@@ -185,7 +190,7 @@ func TestHandler(t *testing.T) {
 
 func NewMockHandler() *Handler {
 	method := NewMockSigningMethod()
-	storage := NewMockStorage("test_uid", "test_user", "test_pass")
+	storage := NewMockStorage("test_uid", "test_user", "test_pass", []string{"permission1", "permission2"})
 	handler, _ := NewHandlerAndAuthenticator(method, storage, time.Hour)
 	return handler
 }

@@ -14,7 +14,7 @@ func TestParseRequest(t *testing.T) {
 		t.Parallel()
 	}
 
-	Convey("Given an request with POST parameters", t, func() {
+	Convey("Given an request with valid POST parameters", t, func() {
 		data := url.Values{
 			"username": []string{"test_user"},
 			"password": []string{"test_pass"},
@@ -29,7 +29,7 @@ func TestParseRequest(t *testing.T) {
 			parsed, err := ParseRequest(req)
 			So(err, ShouldBeNil)
 
-			Convey("The username and password should be parsed", func() {
+			Convey("Then the request fields should be returned", func() {
 				So(parsed.Username, ShouldEqual, "test_user")
 				So(parsed.Username, ShouldEqual, "test_user")
 				So(parsed.Token, ShouldEqual, "test_token")
@@ -37,7 +37,7 @@ func TestParseRequest(t *testing.T) {
 		})
 	})
 
-	Convey("Given an request with JSON parameters", t, func() {
+	Convey("Given an request with valid JSON data", t, func() {
 		data := `{"username": "test_user", "password": "test_pass", "token": "test_token"}`
 		req, err := http.NewRequest("POST", "/auth", strings.NewReader(data))
 		So(err, ShouldBeNil)
@@ -48,7 +48,7 @@ func TestParseRequest(t *testing.T) {
 			parsed, err := ParseRequest(req)
 			So(err, ShouldBeNil)
 
-			Convey("The username and password should be parsed", func() {
+			Convey("hen the request fields should be returned", func() {
 				So(parsed.Username, ShouldEqual, "test_user")
 				So(parsed.Password, ShouldEqual, "test_pass")
 				So(parsed.Token, ShouldEqual, "test_token")
@@ -56,7 +56,7 @@ func TestParseRequest(t *testing.T) {
 		})
 	})
 
-	Convey("Given an request with invalid JSON parameters", t, func() {
+	Convey("Given an request with invalid JSON data", t, func() {
 		req, err := http.NewRequest("POST", "/auth", strings.NewReader(""))
 		So(err, ShouldBeNil)
 

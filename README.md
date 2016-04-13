@@ -24,17 +24,32 @@ http.Handle("/auth", handler)
 http.ListenAndServe(:8080, nil)
 ```
 
-## Example - getting the UID
+### OR
+
+```go
+secret := make([]byte, 20)
+rand.Read(secret)
+// Signing method is used to sign tokens
+signingMethod := auth.SigningMethodHMAC(secret, auth.Size256)
+
+// Handler implements http.Handler and handles logins
+handler, authenticator := auth.NewHandlerAndAuthenticator(signingMethod, storage, time.Hour))
+
+http.Handle("/auth", handler)
+http.ListenAndServe(:8080, nil)
+```
+
+## Example - getting the users information
 
 ```go
 
 func SomeHandlerOrMiddleware(w http.ResponseWriter, r *http.Request) {
-    uid, _ := handler.UID(r);
+    user, _ := handler.UserFromRequest(r);
     
     // You can also store and retrieve from a context
     ctx := context.Background()
-    ctx = auth.NewContext(ctx, uid)
+    ctx = auth.NewUserContext(ctx, user)
     
-    uidFromCtx := auth.UID(ctx)
+    userFromContext := auth.UserFromContext(ctx)
 }
 ```

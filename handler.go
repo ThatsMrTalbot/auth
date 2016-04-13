@@ -55,25 +55,25 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response.Token = token
 }
 
-// UID parses the UID from the request
-func (h *Handler) UID(r *http.Request) (string, error) {
+// UserFromRequest parses the UID from the request
+func (h *Handler) UserFromRequest(r *http.Request) (*User, error) {
 	req, err := ParseRequest(r)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return h.auth.Validate(req.Token)
 }
 
-// UID get the uid of the context
-func UID(ctx context.Context) string {
-	if uid, ok := ctx.Value(contextKey).(string); ok {
-		return uid
+// UserFromContext get the uid of the context
+func UserFromContext(ctx context.Context) *User {
+	if user, ok := ctx.Value(contextKey).(*User); ok {
+		return user
 	}
-	return ""
+	return nil
 }
 
-// NewContext stores a uid in the context
-func NewContext(ctx context.Context, uid string) context.Context {
-	return context.WithValue(ctx, contextKey, uid)
+// NewUserContext stores a user information in the context
+func NewUserContext(ctx context.Context, user *User) context.Context {
+	return context.WithValue(ctx, contextKey, user)
 }
