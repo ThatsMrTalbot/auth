@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"golang.org/x/net/context"
 )
@@ -21,6 +22,13 @@ func NewHandler(auth *Authenticator) *Handler {
 	return &Handler{
 		auth: auth,
 	}
+}
+
+// NewHandlerAndAuthenticator creates a new login handler and Authenticator
+func NewHandlerAndAuthenticator(method SigningMethod, storage Storage, lifetime time.Duration) (*Handler, *Authenticator) {
+	generator := NewTokenGenerator(method)
+	auth := NewAuthenticator(generator, storage, lifetime)
+	return NewHandler(auth), auth
 }
 
 // ServeHTTP implements http.Handler

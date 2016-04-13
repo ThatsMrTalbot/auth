@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -183,6 +184,8 @@ func TestHandler(t *testing.T) {
 }
 
 func NewMockHandler() *Handler {
-	auth := NewMockAuthenticator("test_uid", "test_user", "test_pass")
-	return NewHandler(auth)
+	method := NewMockSigningMethod()
+	storage := NewMockStorage("test_uid", "test_user", "test_pass")
+	handler, _ := NewHandlerAndAuthenticator(method, storage, time.Hour)
+	return handler
 }
