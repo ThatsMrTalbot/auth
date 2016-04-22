@@ -3,6 +3,9 @@
 package auth
 
 import (
+	"bytes"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -16,6 +19,20 @@ type Request struct {
 	Password string `json:"password"`
 }
 
+func reader(r *http.Request) (io.Reader, error) {
+	buf, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	rdr1 := bytes.NewReader(buf)
+	rdr2 := bytes.NewReader(buf)
+
+	r.Body = ioutil.NopCloser(rdr2)
+
+	return rdr1, nil
+}
+
 // ParseRequest parses a request from a http.Request
 func ParseRequest(r *http.Request) (*Request, error) {
 	request := &Request{
@@ -25,9 +42,19 @@ func ParseRequest(r *http.Request) (*Request, error) {
 	}
 	contentType := r.Header.Get("Content-Type")
 
+	if tok := r.Header.Get("Bearer"); tok != "" {
+		request.Token = tok
+	}
+
 	if strings.Contains(contentType, "json") {
 		decoder := ffjson.NewDecoder()
-		err := decoder.DecodeReader(r.Body, request)
+
+		reader, err := reader(r)
+		if err != nil {
+			return nil, err
+		}
+
+		err = decoder.DecodeReader(reader, request)
 		if err != nil {
 			return nil, err
 		}
