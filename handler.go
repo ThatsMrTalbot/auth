@@ -32,8 +32,8 @@ func NewHandlerAndAuthenticator(method SigningMethod, storage Storage, lifetime 
 	return NewHandler(auth), auth
 }
 
-// ServeHTTP implements http.Handler
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// CtxServeHTTP implements scaffold.Handler
+func (h *Handler) CtxServeHTTP(ctx context.Context, w http.ResponseWriter, r *http.Request) {
 	response := &Response{}
 
 	defer func() {
@@ -54,6 +54,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Token = token
+}
+
+// ServeHTTP implements http.Handler
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.CtxServeHTTP(nil, w, r)
 }
 
 // UserFromRequest parses the UID from the request
