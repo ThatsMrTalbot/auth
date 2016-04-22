@@ -1,7 +1,7 @@
 # Auth
 _Simple auth using JWT tokens_
 
-[![Coverage Status](https://coveralls.io/repos/github/ThatsMrTalbot/auth/badge.svg?branch=master)](https://coveralls.io/github/ThatsMrTalbot/auth?branch=master) [![Build Status](https://travis-ci.org/ThatsMrTalbot/auth.svg?branch=master)](https://travis-ci.org/ThatsMrTalbot/auth) [![GoDoc](https://godoc.org/github.com/ThatsMrTalbot/auth?status.svg)](https://godoc.org/github.com/ThatsMrTalbot/auth)
+[![Coverage Status](https://coveralls.io/repos/github/ThatsMrTalbot/auth/badge.svg?branch=master)](https://coveralls.io/github/ThatsMrTalbot/auth?branch=master) [![Build Status](https://travis-ci.org/ThatsMrTalbot/auth.svg?branch=master)](https://travis-ci.org/ThatsMrTalbot/auth) [![GoDoc](https://godoc.org/github.com/ThatsMrTalbot/auth?status.svg)](https://godoc.org/github.com/ThatsMrTalbot/auth) [![Go Report Card](https://goreportcard.com/badge/github.com/ThatsMrTalbot/auth)](https://goreportcard.com/report/github.com/ThatsMrTalbot/auth)
 
 ## Example - the login handler
 
@@ -45,11 +45,11 @@ http.ListenAndServe(:8080, nil)
 
 func SomeHandlerOrMiddleware(w http.ResponseWriter, r *http.Request) {
     user, _ := handler.UserFromRequest(r);
-    
+
     // You can also store and retrieve from a context
     ctx := context.Background()
     ctx = auth.NewUserContext(ctx, user)
-    
+
     userFromContext := auth.UserFromContext(ctx)
 }
 ```
