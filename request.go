@@ -15,6 +15,7 @@ import (
 // Request is a request
 type Request struct {
 	Token    string `json:"token"`
+	Refresh  string `json:"refresh_token"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
@@ -39,6 +40,7 @@ func ParseRequest(r *http.Request) (*Request, error) {
 		Token:    r.FormValue("token"),
 		Username: r.FormValue("username"),
 		Password: r.FormValue("password"),
+		Refresh:  r.FormValue("refresh_token"),
 	}
 	contentType := r.Header.Get("Content-Type")
 

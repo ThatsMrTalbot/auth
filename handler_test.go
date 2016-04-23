@@ -43,6 +43,45 @@ func TestHandler(t *testing.T) {
 				So(body, ShouldNotContainKey, "error")
 				So(body, ShouldContainKey, "token")
 				So(body["token"], ShouldNotBeEmpty)
+				So(body["refresh_token"], ShouldNotBeEmpty)
+			})
+		})
+
+		Convey("When logging in with valid refresh token", func() {
+			token, err := handler.auth.GenerateRefresh(&User{UID: "someuid"})
+			So(err, ShouldBeNil)
+
+			body := fmt.Sprintf(`{"refresh_token": "%s"}`, token)
+			response, err := http.Post(server.URL, "application/json", strings.NewReader(body))
+			So(err, ShouldBeNil)
+
+			Convey("Then the response should contain a valid token", func() {
+				body := make(map[string]string)
+				decoder := json.NewDecoder(response.Body)
+				err := decoder.Decode(&body)
+
+				So(err, ShouldBeNil)
+				So(body, ShouldNotContainKey, "error")
+				So(body, ShouldContainKey, "token")
+				So(body["token"], ShouldNotBeEmpty)
+				So(body["refresh_token"], ShouldNotBeEmpty)
+			})
+		})
+
+		Convey("When logging in with invalid refresh token", func() {
+			body := `{"refresh_token": "invalid"}`
+			response, err := http.Post(server.URL, "application/json", strings.NewReader(body))
+			So(err, ShouldBeNil)
+
+			Convey("Then the response should contain an error", func() {
+				body := make(map[string]string)
+				decoder := json.NewDecoder(response.Body)
+				err := decoder.Decode(&body)
+
+				So(err, ShouldBeNil)
+				So(body, ShouldContainKey, "error")
+				So(body, ShouldNotContainKey, "token")
+				So(body["error"], ShouldNotBeEmpty)
 			})
 		})
 
@@ -225,6 +264,6 @@ func BenchmarkHandler(b *testing.B) {
 func NewMockHandler() *Handler {
 	method := NewMockSigningMethod()
 	storage := NewMockStorage("test_uid", "test_user", "test_pass", []string{"permission1", "permission2"})
-	handler, _ := NewHandlerAndAuthenticator(method, storage, time.Hour)
+	handler, _ := NewHandlerAndAuthenticator(method, storage, time.Hour, time.Hour*24)
 	return handler
 }

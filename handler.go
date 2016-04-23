@@ -26,9 +26,9 @@ func NewHandler(auth *Authenticator) *Handler {
 }
 
 // NewHandlerAndAuthenticator creates a new login handler and Authenticator
-func NewHandlerAndAuthenticator(method SigningMethod, storage Storage, lifetime time.Duration) (*Handler, *Authenticator) {
+func NewHandlerAndAuthenticator(method SigningMethod, storage Storage, lifetime time.Duration, refreshLifetime time.Duration) (*Handler, *Authenticator) {
 	generator := NewTokenGenerator(method)
-	auth := NewAuthenticator(generator, storage, lifetime)
+	auth := NewAuthenticator(generator, storage, lifetime, refreshLifetime)
 	return NewHandler(auth), auth
 }
 
@@ -47,13 +47,35 @@ func (h *Handler) CtxServeHTTP(ctx context.Context, w http.ResponseWriter, r *ht
 		return
 	}
 
-	token, err := h.auth.Authenticate(req.Username, req.Password)
-	if err != nil {
-		response.Error = err.Error()
-		return
+	var token, refresh string
+
+	if req.Refresh != "" {
+		var user *User
+		user, err = h.auth.ValidateRefresh(req.Refresh)
+		if err != nil {
+			response.Error = err.Error()
+			return
+		}
+		token, err = h.auth.Generate(user)
+		if err != nil {
+			response.Error = err.Error()
+			return
+		}
+		refresh, err = h.auth.GenerateRefresh(user)
+		if err != nil {
+			response.Error = err.Error()
+			return
+		}
+	} else {
+		token, refresh, err = h.auth.Authenticate(req.Username, req.Password)
+		if err != nil {
+			response.Error = err.Error()
+			return
+		}
 	}
 
 	response.Token = token
+	response.RefreshToken = refresh
 }
 
 // ServeHTTP implements http.Handler
@@ -68,7 +90,9 @@ func (h *Handler) UserFromRequest(r *http.Request) (*User, error) {
 		return nil, err
 	}
 
-	return h.auth.Validate(req.Token)
+	user, err := h.auth.ValidateToken(req.Token)
+
+	return user, nil
 }
 
 // UserFromContext get the uid of the context
